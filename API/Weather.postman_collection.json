@@ -1,0 +1,138 @@
+{
+  "info": {
+    "_postman_id": "cf11926a-d4de-4f0a-9afb-0ccbb0164120",
+    "name": "Weather",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "31105117"
+  },
+  "item": [
+    {
+      "name": "0 токен авторизации",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Парсим JSON из ответа сервера\r\nvar jsonData = pm.response.json();\r\n\r\n// 2. Достаем токен по нужному пути (подставьте свой путь к полю с токеном)\r\nvar token = jsonData.data.access_token; \r\n\r\n// 3. Сохраняем токен в переменную окружения (Environment)\r\npm.environment.set(\"auth_token\", token);\r\n\r\n// (Альтернативный вариант: сохранить в переменную коллекции)\r\n// pm.collectionVariables.set(\"auth_token\", token);\r\n\r\n// (Альтернативный вариант: сохранить в глобальную переменную)\r\n// pm.globals.set(\"auth_token\", token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "POST /api/login",
+          "host": [
+            "POST "
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "1 исп токена авторизации",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://api.open-meteo.com/v1/forecast",
+          "protocol": "https",
+          "host": [
+            "api",
+            "open-meteo",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "forecast"
+          ],
+          "query": [
+            {
+              "key": "auth_token",
+              "value": "{{auth_token}}",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "прогноз заморозков + тесты",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", () => {\r\n  pm.expect(pm.response.code).to.eql(200);\r\n});\r\n\r\npm.test(\"сейчас есть заморозки?\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData.daily.temperature_2m_min[0]).to.be.below(0);\r\n});\r\n\r\npm.test(\"завтра будут заморозки?\", function () {\r\n    var jsonData = pm.response.json();\r\n    pm.expect(jsonData.daily.temperature_2m_min[1]).to.be.below(0);\r\n});\r\n\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept-Encoding",
+            "value": "deflate, gzip"
+          }
+        ],
+        "url": {
+          "raw": "{{host}}/forecast?latitude=53.2316&longitude=50.2596&daily=temperature_2m_min&forecast_days=2",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "forecast"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "53.2316"
+            },
+            {
+              "key": "longitude",
+              "value": "50.2596"
+            },
+            {
+              "key": "daily",
+              "value": "temperature_2m_min"
+            },
+            {
+              "key": "forecast_days",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": ""
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    }
+  ]
+}
